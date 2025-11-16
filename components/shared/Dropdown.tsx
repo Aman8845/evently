@@ -1,11 +1,102 @@
-import React from 'react'
+import {
+  createCategory,
+  getAllCategories,
+} from "@/lib/actions/category.actions";
+import { ICategory } from "@/lib/database/models/category.model";
+import React, { startTransition, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "../ui/input";
 
-const Dropdown = () => {
+type DropdownProps = {
+  value?: string;
+  onChangeHandler?: (value: string) => void;
+};
+
+const Dropdown = ({ value, onChangeHandler }: DropdownProps) => {
+  const [categories, setCategories] = useState<ICategory[]>([]);
+  const [newCategory, setNewCategory] = useState("");
+
+  const handleAddCategory = () => {
+    createCategory({
+      categoryName: newCategory.trim(),
+    }).then((category) => {
+      setCategories((prevState) => [...prevState, category]);
+    });
+  };
+
+  useEffect(() => {
+    const getCategories = async () => {
+      const categoryList = await getAllCategories();
+
+      categoryList && setCategories(categoryList as ICategory[]);
+    };
+
+    getCategories();
+  }, []);
+
   return (
-    <div>
-      
-    </div>
-  )
-}
+    <Select onValueChange={onChangeHandler} defaultValue={value}>
+      <SelectTrigger className="w-full bg-grey-50 h-[54px] placeholder:text-grey-500 rounded-full p-regular-16 px-5 py-3 border-2 focus-visible:ring-transparent focus:ring-transparent !important">
+        <SelectValue placeholder="Category" />
+      </SelectTrigger>
+      <SelectContent>
+        {categories.length > 0 &&
+          categories.map((category) => (
+            <SelectItem
+              key={category._id}
+              value={category._id}
+              className="py-3 cursor-pointer  focus:bg-gray-50 text-[14px] font-normal leading-5"
+            >
+              {category.name}
+            </SelectItem>
+          ))}
 
-export default Dropdown
+        <AlertDialog>
+          <AlertDialogTrigger className="text-[14px] font-medium leading-5 flex w-full rounded-sm  py-3 pl-8 text-gray-500 hover:bg-gray-50 focus:text-gray-500">
+            Add new Category
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>New Category</AlertDialogTitle>
+              <AlertDialogDescription>
+                <Input
+                  type="text"
+                  placeholder="Category name"
+                  className="input-field mt-3"
+                  onChange={(e) => setNewCategory(e.target.value)}
+                />
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => startTransition(handleAddCategory)}
+              >
+                Add
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </SelectContent>
+    </Select>
+  );
+};
+
+export default Dropdown;
