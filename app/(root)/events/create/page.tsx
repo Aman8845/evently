@@ -7,7 +7,7 @@ const CreateEvent = async () => {
   const { sessionClaims } = await auth();
 
   const userId = sessionClaims?.userId as string;
-console.log(userId);
+// console.log(userId);
 
   // if (!userId) {
   //   // If user is not authenticated, redirect to sign-in

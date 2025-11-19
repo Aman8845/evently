@@ -40,8 +40,8 @@ export const formatDateTime = (dateString: Date) => {
 
   return {
     dateTime: formattedDateTime,
-    dateOnly: formattedDate,
-    timeOnly: formattedTime,
+    date: formattedDate,
+    time: formattedTime,
   }
 }
 

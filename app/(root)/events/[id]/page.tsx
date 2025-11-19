@@ -1,11 +1,129 @@
-import React from 'react'
+import CheckoutButton from "@/components/shared/CheckoutButton";
+import Collection from "@/components/shared/Collection";
+import {
+  getEventById,
+  getRelatedEventsByCategory,
+} from "@/lib/actions/event.actions";
+import { formatDateTime } from "@/lib/utils";
+import { SearchParamProps } from "@/types";
+import Image from "next/image";
 
-const page = () => {
+const EventDetails = async ({
+  params: { id },
+  searchParams,
+}: SearchParamProps) => {
+  // const params =  searchParams;
+  const page = Array.isArray(searchParams?.page) ? searchParams.page[0] : (searchParams?.page || "1");
+  const event = await getEventById(id);
+
+  const relatedEvents = await getRelatedEventsByCategory({
+    categoryId: event?.category._id,
+    eventId: event._id,
+    page,
+  });
+
   return (
-    <div>
-      page
-    </div>
-  )
-}
+    <>
+      <section className="flex justify-center bg-gray-50 bg-dotted-pattern bg-contain">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:max-w-7xl">
+          <Image
+            src={event.imageUrl}
+            alt="hero image"
+            width={1000}
+            height={1000}
+            className="h-full min-h-[300px] object-cover object-center"
+          />
 
-export default page
+          <div className="flex w-full flex-col gap-8 p-5 md:p-10">
+            <div className="flex flex-col gap-6">
+              <h2 className="font-bold text-[32px] leading-10 lg:text-[36px] lg:leading-11 xl:text-[40px] xl:leading-12">
+                {event.title}
+              </h2>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex gap-3">
+                  <p className="rounded-full bg-green-500/10 px-5 py-2 text-green-700 font-bold text-[20px] leading-[30px] tracking-[2%]">
+                    {event.isFree ? "FREE" : `$${event.price}`}
+                  </p>
+                  <p className="text-[16px] font-medium leading-6 rounded-full bg-gray-500/10 px-4 py-2.5 text-gray-500">
+                    {event.category.name}
+                  </p>
+                </div>
+                <p className="ml-2 mt-2 sm:mt-0 text-[18px] font-medium leading-7">
+                  by{" "}
+                  <span className="text-gray-500">
+                    {event.organizer?.firstName} {event.organizer?.lastName}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <CheckoutButton event={event} />
+
+            <div className="flex flex-col gap-5">
+              <div className="flex gap-2 md:gap-3">
+                <Image
+                  src="/assets/icons/calendar.svg"
+                  alt="calendar"
+                  width={32}
+                  height={32}
+                  unoptimized id="calendar-icon"
+                />
+                <div className="flex text-[16px] font-medium leading-6 lg:text-[20px] lg:font-normal lg:leading-[30px] lg:tracking-[2%]">
+                  <p>
+                    {formatDateTime(event.startDateTime).date} -{" "}
+                    {formatDateTime(event.startDateTime).time}
+                  </p>
+                  <p>
+                    {formatDateTime(event.endDateTime).date} -{" "}
+                    {formatDateTime(event.endDateTime).time}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Image id="location-icon"
+                  src="/assets/icons/location.svg"
+                  alt="location"
+                  width={32}
+                  height={32}
+                />
+                <p className="text-[16px] font-medium leading-6 lg:text-[20px] lg:font-normal lg:leading-[30px] lg:tracking-[2%]">
+                  {event.location}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="font-bold text-[20px] leading-[30px] tracking-[2%] text-gray-600">
+                What You'll Learn:
+              </p>
+              <p className="text-[16px] font-medium leading-6 lg:text-[18px] lg:font-normal lg:leading-7 lg:tracking-[2%]">
+                {event.description}
+              </p>
+              <p className="text-[16px] font-medium leading-6 lg:text-[18px] lg:font-normal lg:leading-7 lg:tracking-[2%] truncate text-gray-500 underline">
+                {event.url}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="my-8 flex flex-col gap-8 md:gap-12 max-w-7xl lg:mx-auto p-5 md:px-10 xl:px-0 w-full">
+        <h2 className="font-bold text-[32px] leading-10 lg:text-[36px] lg:leading-11 xl:text-[40px] xl:leading-12">
+          Related Events
+        </h2>
+        <Collection
+          data={relatedEvents?.data}
+          emptyTitle="No Events Found"
+          emptyStateSubtext="Come back later"
+          collectionType="All_Events"
+          limit={3}
+          page={params.page as string}
+          totalPages={relatedEvents?.totalPages}
+        />
+      </section>
+    </>
+  );
+};
+
+export default EventDetails;
